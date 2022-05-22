@@ -19,14 +19,14 @@ const client = new MongoClient(uri, {
 
 const verifyJwt = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader.split[1];
   if (!authHeader) {
-    return res.send({ status: 401, message: "unAuthorize access" });
+    return res.status(401).send({ message: "unAuthorize access" });
   }
+  const token = authHeader.split(" ")[1];
 
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+  jwt.verify(token, process.env.SECRET_TOKEN, function (err, decoded) {
     if (err) {
-      return res.send({ status: 403, message: "forbidden access" });
+      return res.status(403).send({ message: "forbidden access" });
     }
     if (decoded) {
       req.decoded = decoded;
@@ -52,11 +52,31 @@ const run = async () => {
       res.send({ token: token });
     });
 
+    /* update user profile */
+    app.put("/user/:id", async (req, res) => {
+      const email = req.params.id;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
     /* post user review  */
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result);
+    });
+
+    /* get user profile information */
+    app.get("/user", verifyJwt, async (req, res) => {
+      const email = req.query.email;
+      const user = await userCollection.findOne({ email: email });
+      res.send(user);
     });
   } finally {
     // await client.close()
