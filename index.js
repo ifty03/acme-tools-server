@@ -38,15 +38,25 @@ const verifyJwt = (req, res, next) => {
 const run = async () => {
   try {
     await client.connect();
-    const UserCollection = client.db("tools_Db").collection("users");
-    console.log("conected");
+    const userCollection = client.db("tools_Db").collection("users");
+    const reviewCollection = client.db("tools_Db").collection("reviews");
 
     app.post("/user/:id", async (req, res) => {
       const email = req.params.id;
       const user = req.body;
       var token = jwt.sign(email, process.env.SECRET_TOKEN);
-      const result = await UserCollection.insertOne(user);
+      const exist = await userCollection.findOne({ email: email });
+      if (!exist) {
+        const result = await userCollection.insertOne(user);
+      }
       res.send({ token: token });
+    });
+
+    /* post user review  */
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
     });
   } finally {
     // await client.close()
