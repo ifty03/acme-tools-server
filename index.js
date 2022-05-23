@@ -40,6 +40,19 @@ const run = async () => {
     await client.connect();
     const userCollection = client.db("tools_Db").collection("users");
     const reviewCollection = client.db("tools_Db").collection("reviews");
+    const toolsCollection = client.db("tools_Db").collection("tools");
+
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "forbidden" });
+      }
+    };
 
     app.post("/user/:id", async (req, res) => {
       const email = req.params.id;
@@ -87,25 +100,20 @@ const run = async () => {
     });
 
     /* get all users */
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
       const email = req.query.email;
       const users = await userCollection.find().toArray();
       res.send(users);
     });
 
     /* make an admin */
-    app.put("/makeAdmin/:id", verifyJwt, async (req, res) => {
+    app.put("/makeAdmin/:id", verifyJwt, verifyAdmin, async (req, res) => {
       const email = req.params.id;
       const user = req.body;
       const filter = user;
-      const verifyAdmin = await userCollection.findOne({ email: email });
       const updateDoc = {
         $set: { role: "admin" },
       };
-      console.log(verifyAdmin);
-      if (verifyAdmin?.role !== "admin") {
-        return res.status(403).send({ message: "access forbidden" });
-      }
       const result = await userCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
@@ -115,15 +123,17 @@ const run = async () => {
       const user = req.body;
       const filter = user;
       const options = { upsert: true };
-      const verifyAdmin = await userCollection.findOne({ email: email });
       const updateDoc = {
         $set: { role: "user" },
       };
-      console.log(verifyAdmin);
-      if (verifyAdmin?.role !== "admin") {
-        return res.status(403).send({ message: "access forbidden" });
-      }
       const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
+    /* add a product */
+    app.post("/product", verifyJwt, verifyAdmin, async (req, res) => {
+      const tool = req.body;
+      const result = await toolsCollection.insertOne(tool);
       res.send(result);
     });
   } finally {
