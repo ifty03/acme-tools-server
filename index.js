@@ -72,11 +72,36 @@ const run = async () => {
       res.send(result);
     });
 
+    /* get letest 4 reviews */
+    app.get("/reviews", async (req, res) => {
+      const cursor = reviewCollection.find({}).sort({ $natural: -1 }).limit(4);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
+    });
+
     /* get user profile information */
     app.get("/user", verifyJwt, async (req, res) => {
       const email = req.query.email;
       const user = await userCollection.findOne({ email: email });
       res.send(user);
+    });
+
+    /* get all users */
+    app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+
+    /* make an admin */
+    app.put("/makeAdmin/:id", verifyJwt, async (req, res) => {
+      const email = req.params.id;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
     });
   } finally {
     // await client.close()
