@@ -96,11 +96,34 @@ const run = async () => {
     /* make an admin */
     app.put("/makeAdmin/:id", verifyJwt, async (req, res) => {
       const email = req.params.id;
-      const filter = { email: email };
+      const user = req.body;
+      const filter = user;
+      const verifyAdmin = await userCollection.findOne({ email: email });
       const updateDoc = {
         $set: { role: "admin" },
       };
+      console.log(verifyAdmin);
+      if (verifyAdmin?.role !== "admin") {
+        return res.status(403).send({ message: "access forbidden" });
+      }
       const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    /* cancel an admin */
+    app.put("/cancelAdmin/:id", verifyJwt, async (req, res) => {
+      const email = req.params.id;
+      const user = req.body;
+      const filter = user;
+      const options = { upsert: true };
+      const verifyAdmin = await userCollection.findOne({ email: email });
+      const updateDoc = {
+        $set: { role: "user" },
+      };
+      console.log(verifyAdmin);
+      if (verifyAdmin?.role !== "admin") {
+        return res.status(403).send({ message: "access forbidden" });
+      }
+      const result = await userCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
   } finally {
