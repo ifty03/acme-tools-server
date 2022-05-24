@@ -41,6 +41,7 @@ const run = async () => {
     const userCollection = client.db("tools_Db").collection("users");
     const reviewCollection = client.db("tools_Db").collection("reviews");
     const toolsCollection = client.db("tools_Db").collection("tools");
+    const ordersCollection = client.db("tools_Db").collection("orders");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded;
@@ -144,12 +145,13 @@ const run = async () => {
       const tool = await toolsCollection.findOne(query);
       res.send(tool);
     });
-    app.delete("/tool/:id",(req,res)=>{
+    /* delete one tool item */
+    app.delete("/tool/:id", verifyJwt, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const query = {_id:ObjectId(id)}
-      const result = await toolsCollection.deleteOne(query)
-      res.send(result)
-    })
+      const query = { _id: ObjectId(id) };
+      const result = await toolsCollection.deleteOne(query);
+      res.send(result);
+    });
 
     /* load all tools data */
     app.get("/tools", async (req, res) => {
@@ -157,9 +159,18 @@ const run = async () => {
       const tools = await cursor.toArray();
       res.send(tools);
     });
+
+    /* get all tools  */
     app.get("/allTools", async (req, res) => {
       const tools = await toolsCollection.find().toArray();
       res.send(tools);
+    });
+
+    /* post order in database */
+    app.post("/order", verifyJwt, async (req, res) => {
+      const order = req.body;
+      const result = await ordersCollection.insertOne(order);
+      res.send(result);
     });
   } finally {
     // await client.close()
