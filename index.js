@@ -144,6 +144,12 @@ const run = async () => {
       const tool = await toolsCollection.findOne(query);
       res.send(tool);
     });
+    app.delete("/tool/:id",(req,res)=>{
+      const id = req.params.id;
+      const query = {_id:ObjectId(id)}
+      const result = await toolsCollection.deleteOne(query)
+      res.send(result)
+    })
 
     /* load all tools data */
     app.get("/tools", async (req, res) => {
