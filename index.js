@@ -148,6 +148,7 @@ const run = async () => {
     /* delete one tool item */
     app.delete("/tool/:id", verifyJwt, verifyAdmin, async (req, res) => {
       const id = req.params.id;
+      console.log(id);
       const query = { _id: ObjectId(id) };
       const result = await toolsCollection.deleteOne(query);
       res.send(result);
@@ -171,6 +172,18 @@ const run = async () => {
       const order = req.body;
       const result = await ordersCollection.insertOne(order);
       res.send(result);
+    });
+
+    /* get order data for spasific user */
+    app.get("/orders", verifyJwt, async (req, res) => {
+      const email = req.query.email;
+      const decodedEmail = req.decoded;
+      const query = { email: email };
+      if (email !== decodedEmail) {
+        return res.status(403).send({ message: "access forbidden" });
+      }
+      const orders = await ordersCollection.find(query).toArray();
+      res.send(orders);
     });
   } finally {
     // await client.close()
