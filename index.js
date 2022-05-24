@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 /* middleware */
@@ -135,6 +135,25 @@ const run = async () => {
       const tool = req.body;
       const result = await toolsCollection.insertOne(tool);
       res.send(result);
+    });
+
+    /* load a product for order */
+    app.get("/tool/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const tool = await toolsCollection.findOne(query);
+      res.send(tool);
+    });
+
+    /* load all tools data */
+    app.get("/tools", async (req, res) => {
+      const cursor = toolsCollection.find().sort({ $natural: -1 }).limit(6);
+      const tools = await cursor.toArray();
+      res.send(tools);
+    });
+    app.get("/allTools", async (req, res) => {
+      const tools = await toolsCollection.find().toArray();
+      res.send(tools);
     });
   } finally {
     // await client.close()
