@@ -225,6 +225,7 @@ const run = async () => {
         updateDoc,
         options
       );
+      res.send(result);
     });
 
     /* cancel user order */
@@ -233,6 +234,12 @@ const run = async () => {
       const query = { _id: ObjectId(id) };
       const result = await ordersCollection.deleteOne(query);
       res.send(result);
+    });
+
+    /* get add orders for admin */
+    app.get("/allOrders", verifyJwt, verifyAdmin, async (req, res) => {
+      const orders = await ordersCollection.find().toArray();
+      res.send(orders);
     });
   } finally {
     // await client.close()
