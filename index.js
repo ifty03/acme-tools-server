@@ -49,7 +49,6 @@ const run = async () => {
       const requesterAccount = await userCollection.findOne({
         email: requester,
       });
-      console.log(requesterAccount);
       if (requesterAccount.role === "admin") {
         next();
       } else {
@@ -106,7 +105,7 @@ const run = async () => {
 
     /* get letest 4 reviews */
     app.get("/reviews", async (req, res) => {
-      const cursor = reviewCollection.find({}).sort({ $natural: -1 }).limit(4);
+      const cursor = reviewCollection.find({}).sort({ $natural: -1 }).limit(6);
       const reviews = await cursor.toArray();
       res.send(reviews);
     });
@@ -181,8 +180,9 @@ const run = async () => {
 
     /* get all tools  */
     app.get("/allTools", verifyJwt, verifyAdmin, async (req, res) => {
-      const tools = await toolsCollection.find().toArray();
-      res.send(tools);
+      const tools = toolsCollection.find({});
+      const cursor = await tools.toArray();
+      res.send(cursor);
     });
 
     /* post order in database */
