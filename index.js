@@ -165,7 +165,6 @@ const run = async () => {
     /* delete one tool item */
     app.delete("/tool/:id", verifyJwt, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const query = { _id: ObjectId(id) };
       const result = await toolsCollection.deleteOne(query);
       res.send(result);
@@ -244,13 +243,12 @@ const run = async () => {
     });
 
     /* check and verify admin */
-    app.get("/admin/:id", verifyJwt, verifyAdmin, async (req, res) => {
-      const email = req.params.email;
+    app.get("/admin/:id", verifyJwt, async (req, res) => {
+      const email = req.params.id;
       const user = await userCollection.findOne({ email: email });
-      if (!user?.role === "admin") {
-        return res.send(403).send({ message: "access forbidden" });
-      }
-      res.send({ admin: true });
+      const isAdmin = user?.role === "admin";
+
+      res.send({ admin: isAdmin });
     });
   } finally {
     // await client.close()
