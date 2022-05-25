@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
@@ -54,6 +55,22 @@ const run = async () => {
         res.status(403).send({ message: "forbidden" });
       }
     };
+
+    /* for payment intent */
+    app.post("/create-payment-intent", verifyJwt, async (req, res) => {
+      const { totalPrice } = req.body;
+      const amount = totalPrice * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
     app.post("/user/:id", async (req, res) => {
       const email = req.params.id;
@@ -192,6 +209,30 @@ const run = async () => {
       const query = { _id: ObjectId(id) };
       const order = await ordersCollection.findOne(query);
       res.send(order);
+    });
+
+    /* payment complete data update */
+    app.put("/payment/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const order = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: order,
+      };
+      const result = await ordersCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+    });
+
+    /* cancel user order */
+    app.delete("/order/:id", verifyJwt, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await ordersCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
     // await client.close()
