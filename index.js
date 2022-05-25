@@ -49,6 +49,7 @@ const run = async () => {
       const requesterAccount = await userCollection.findOne({
         email: requester,
       });
+      console.log(requesterAccount);
       if (requesterAccount.role === "admin") {
         next();
       } else {
@@ -179,7 +180,7 @@ const run = async () => {
     });
 
     /* get all tools  */
-    app.get("/allTools", async (req, res) => {
+    app.get("/allTools", verifyJwt, verifyAdmin, async (req, res) => {
       const tools = await toolsCollection.find().toArray();
       res.send(tools);
     });
@@ -240,6 +241,16 @@ const run = async () => {
     app.get("/allOrders", verifyJwt, verifyAdmin, async (req, res) => {
       const orders = await ordersCollection.find().toArray();
       res.send(orders);
+    });
+
+    /* check and verify admin */
+    app.get("/admin/:id", verifyJwt, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      if (!user?.role === "admin") {
+        return res.send(403).send({ message: "access forbidden" });
+      }
+      res.send({ admin: true });
     });
   } finally {
     // await client.close()
