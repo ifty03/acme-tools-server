@@ -72,6 +72,7 @@ const run = async () => {
       });
     });
 
+    /* get a single user */
     app.post("/user/:id", async (req, res) => {
       const email = req.params.id;
       const user = req.body;
