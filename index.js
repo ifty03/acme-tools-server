@@ -7,6 +7,7 @@ const stripe = require("stripe")(process.env.PAYMENT_SECRET);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const dbConnect = require("./utilits/dbConnect");
 const toolsRoutes = require("./route/tools.route");
+const viewCount = require("./middleware/viewCount");
 const port = process.env.PORT || 5000;
 
 /* middleware */
@@ -237,6 +238,13 @@ run().catch(console.dir);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+app.get("/no", viewCount, (req, res) => {
+  res.send("midellware found");
+});
+
+app.all("*", (req, res) => {
+  res.send("Route not found. Are you hacker ? can you hack my website?");
 });
 
 app.listen(port, () => {

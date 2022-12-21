@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const toolControler = require("../controlers/tool.controler");
 
 // router.get("/", (req, res) => {
 //   res.send("tools is nothing");
@@ -11,9 +12,7 @@ const router = express.Router();
 
 router
   .route("/")
-  .get((req, res) => {
-    res.send("nothing should bed added (new addition)");
-  })
+  .get(toolControler.getAllTool)
   .post((req, res) => {
     res.send("this is nothing new addition");
   });
